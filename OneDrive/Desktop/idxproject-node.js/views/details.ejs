@@ -1,0 +1,51 @@
+<html lang="en">
+  <%- include("./partials/head.ejs") %>
+
+  <body>
+    <%- include("./partials/navbar.ejs") %>
+    <div class="detailsContainer">
+      <h1><%=stock.symbol%></h1>
+      <div class="priceCard">
+        <div class="mainPrice">Rp <%= stock.price.toLocaleString() %></div>
+
+        <div
+          class="priceChange <%= stock.price >= stock.prevDayClose ? 'positive' : 'negative' %>"
+        >
+          <%= ( ((stock.price - stock.prevDayClose) / stock.prevDayClose) * 100
+          ).toFixed(2) %>%
+        </div>
+      </div>
+
+      <div className="infoGrid">
+        <div className="infoItem">
+          <span>High</span>
+          <strong>Rp <%=stock.high%></strong>
+        </div>
+        <div className="infoItem">
+          <span>Low</span>
+          <strong>Rp <%=stock.low%></strong>
+        </div>
+        <div className="infoItem">
+          <span>Value</span>
+          <strong><%=stock.volume.toLocaleString("id-ID")%></strong>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="deleteButton" data-doc="<%=stock._id%>">Delete</a>
+      </div>
+    </div>
+    <script>
+      const trashcan = document.querySelector("a.deleteButton");
+
+      trashcan.addEventListener("click", (e) => {
+        const endpoint = `/watchlist/${trashcan.dataset.doc}`;
+        fetch(endpoint, {
+          method: "DELETE",
+        })
+          .then((response) => response.json())
+          .then((data) => (window.location.href = data.redirect))
+          .catch((err) => console.log(err));
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <%- include('./partials/head.ejs') %>
+  </head>
+  <body>
+    <%- include('./partials/navbar.ejs') %>
+  <div class="container">
+ 
+      <h2 class="title">Watchlist</h2>
+
+
+      <div class="inputGroup">
+        <form action="/watchlist" method="POST">
+        <div class="watchlist-input">
+         <input type="text" id="watchInput" name="symbol" class="inputField" placeholder="Enter symbol" required />
+<button type="submit" id="addWatchBtn" class="button button-primary">Add</button>
+
+        </div>
+      </form>
+    </div>
+
+   <% if (watchlist.length > 0) { %>
+  <% watchlist.forEach(stock => { %>
+    <a href="/watchlist/<%=stock._id%>">
+      <div class="watchlistRow" data-symbol="<%= stock.symbol %>">
+
+        <div class="stockSymbol"><%= stock.symbol %></div>
+
+        <div class="stockPrice">
+          Rp <span class="price">
+            <%= stock.price != null ? stock.price.toLocaleString() : '0' %>
+          </span>
+        </div>
+
+        <div class="stockChange <%= stock.priceChange >= 0 ? 'positive' : 'negative' %>">
+          <span class="change">
+            <%= stock.priceChange != null ? stock.priceChange.toFixed(2) : '0.00' %>
+          </span>%
+        </div>
+
+      </div>
+    </a>
+  <% }) %>
+<% } else { %>
+  <p class="emptyWatchlist">There are no Stock to display...</p>
+<% } %>
+
+      
+
+      </div>
+  
+
+
+    </div>
+  </div>
+ <script>
+async function refreshPrices() {
+  try {
+    const res = await fetch("/api/watchlist");
+    const data = await res.json();
+
+    data.forEach(stock => {
+      const row = document.querySelector(
+        `.watchlistRow[data-symbol="${stock.symbol}"]`
+      );
+
+      if (!row) return;
+
+      // update price
+      row.querySelector(".price").textContent =
+        stock.price.toLocaleString();
+
+      // update change
+      const changeEl = row.querySelector(".stockChange");
+      row.querySelector(".change").textContent =
+        stock.priceChange.toFixed(2);
+
+      changeEl.classList.remove("positive", "negative");
+      changeEl.classList.add(
+        stock.priceChange >= 0 ? "positive" : "negative"
+      );
+    });
+  } catch (err) {
+    console.error("Price refresh failed", err);
+  }
+}
+
+// refresh every 1 seconds
+setInterval(refreshPrices, 1000);
+
+// first load
+refreshPrices();
+</script>
+
+
+  </body>
+</html>
