@@ -1,19 +1,17 @@
-const Stock = require("../models/stock");
-const Portfolio = require("../models/portfolio");
-const Order = require("../models/order.js");
-const fetchStock = require("../fetchStock.js");
-const allStockCache = require("../services/marketData");
+// controller/stockController.js
+import Stock from "../models/stock.js";
+import Portfolio from "../models/portfolio.js";
+import Order from "../models/order.js";
+import fetchStock from "../fetchStock.js";
 
-const stock_index = async (req, res) => {
+export const stock_index = async (req, res) => {
   try {
     const watchlist = await Stock.find();
 
-    // fetch live data for each symbol
     const liveData = await Promise.all(
       watchlist.map((stock) => fetchStock(stock.symbol))
     );
 
-    // merge MongoDB symbol with live data
     const watchlistWithData = watchlist.map((stock, index) => ({
       _id: stock._id,
       symbol: stock.symbol,
@@ -28,31 +26,25 @@ const stock_index = async (req, res) => {
           100
         : 0,
     }));
-    // const topVolume = [...allStockCache.getAllStockData()]
-    //   .sort((a, b) => b.volume - a.volume)
-    //   .slice(0, 10);
 
     res.render("homepage", {
       title: "IDX Screener",
       watchlist: watchlistWithData,
-      //topVolume,
     });
   } catch (err) {
     console.error(err);
     res.render("homepage", {
       title: "IDX Screener",
       watchlist: [],
-      // topVolume: [],
     });
   }
 };
 
-//get portfolio
-const stock_portfolio = async (req, res) => {
+// Portfolio
+export const stock_portfolio = async (req, res) => {
   try {
     const stocks = await Portfolio.find();
 
-    // fetch live prices
     const liveData = await Promise.all(stocks.map((s) => fetchStock(s.symbol)));
 
     let totalInvested = 0;
@@ -60,7 +52,6 @@ const stock_portfolio = async (req, res) => {
 
     const portfolioWithData = stocks.map((stock, i) => {
       const marketPrice = liveData[i]?.marketPrice || 0;
-
       const invested = stock.quantity * stock.avgPrice * 100;
       const marketValue = stock.quantity * marketPrice * 100;
       const pnl = marketValue - invested;
@@ -98,8 +89,8 @@ const stock_portfolio = async (req, res) => {
   }
 };
 
-//order details
-const portfolio_history = async (req, res) => {
+// Order history
+export const portfolio_history = async (req, res) => {
   const stocks = await Order.find().sort({ date: -1 });
   res.render("portfolioHistory", {
     title: "Order History",
@@ -107,8 +98,8 @@ const portfolio_history = async (req, res) => {
   });
 };
 
-// API: get live watchlist prices
-const api_watchlist_prices = async (req, res) => {
+// API: watchlist prices
+export const api_watchlist_prices = async (req, res) => {
   try {
     const watchlist = await Stock.find();
 
@@ -134,8 +125,8 @@ const api_watchlist_prices = async (req, res) => {
   }
 };
 
-//add watchlist stock
-const stock_add_post = async (req, res) => {
+// Add watchlist stock
+export const stock_add_post = async (req, res) => {
   try {
     const symbol = req.body.symbol.toUpperCase();
     await Stock.create({ symbol });
@@ -145,8 +136,8 @@ const stock_add_post = async (req, res) => {
   }
 };
 
-// add or sell portfolio stock
-const portfolio_add_post = async (req, res) => {
+// Add/sell portfolio stock
+export const portfolio_add_post = async (req, res) => {
   try {
     const symbol = req.body.symbol.toUpperCase();
     const lot = Number(req.body.lot);
@@ -155,67 +146,40 @@ const portfolio_add_post = async (req, res) => {
 
     let stock = await Portfolio.findOne({ symbol });
 
-    // ======================
     // BUY
-    // ======================
     if (lot > 0) {
       if (!stock) {
-        // first buy
         await Portfolio.create({
           symbol,
           quantity: lot,
           buyPrice: price,
           avgPrice: price,
-          targetPrice: targetPrice,
+          targetPrice,
           buyDate: req.body.date || new Date(),
         });
-        await Order.create({
-          symbol,
-          side: "BUY",
-          price,
-          quantity: lot,
-        });
+        await Order.create({ symbol, side: "BUY", price, quantity: lot });
       } else {
         const totalCost = stock.quantity * stock.avgPrice + lot * price;
-
         const newQty = stock.quantity + lot;
-
         stock.avgPrice = totalCost / newQty;
         stock.quantity = newQty;
-        await Order.create({
-          symbol,
-          side: "BUY",
-          price,
-          quantity: lot,
-        });
-
+        await Order.create({ symbol, side: "BUY", price, quantity: lot });
         await stock.save();
       }
     }
 
-    // ======================
     // SELL
-    // ======================
     if (lot < 0) {
-      if (!stock) {
-        return res.status(400).send("Stock not owned");
-      }
+      if (!stock) return res.status(400).send("Stock not owned");
 
       const sellQty = Math.abs(lot);
 
-      if (sellQty > stock.quantity) {
+      if (sellQty > stock.quantity)
         return res.status(400).send("Not enough lots to sell");
-      }
 
       stock.quantity -= sellQty;
-      await Order.create({
-        symbol,
-        side: "SELL",
-        price,
-        quantity: lot,
-      });
+      await Order.create({ symbol, side: "SELL", price, quantity: lot });
 
-      // sold all → delete
       if (stock.quantity === 0) {
         await Portfolio.findByIdAndDelete(stock._id);
       } else {
@@ -230,17 +194,13 @@ const portfolio_add_post = async (req, res) => {
   }
 };
 
-//fetch stock details
-const stock_details = async (req, res) => {
+// Stock details
+export const stock_details = async (req, res) => {
   try {
     const id = req.params.id;
     const stock = await Stock.findById(id);
+    if (!stock) return res.status(404).send("Stock not found");
 
-    if (!stock) {
-      return res.status(404).send("Stock not found");
-    }
-
-    // Fetch live data
     const liveData = await fetchStock(stock.symbol);
 
     const stockDetails = {
@@ -265,38 +225,33 @@ const stock_details = async (req, res) => {
   }
 };
 
-const stock_delete = (req, res) => {
+// Delete
+export const stock_delete = async (req, res) => {
   const id = req.params.id;
-
-  Stock.findByIdAndDelete(id)
-    .then((result) => {
-      res.json({ redirect: "/" });
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+  try {
+    await Stock.findByIdAndDelete(id);
+    res.json({ redirect: "/" });
+  } catch (err) {
+    console.error(err);
+  }
 };
 
-const portfolio_stock_delete = (req, res) => {
+export const portfolio_stock_delete = async (req, res) => {
   const id = req.params.id;
-
-  Portfolio.findByIdAndDelete(id)
-    .then((result) => {
-      res.json({ redirect: "/portfolio" });
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+  try {
+    await Portfolio.findByIdAndDelete(id);
+    res.json({ redirect: "/portfolio" });
+  } catch (err) {
+    console.error(err);
+  }
 };
 
-module.exports = {
-  stock_add_post,
-  stock_delete,
-  stock_details,
-  stock_index,
-  stock_portfolio,
-  portfolio_add_post,
-  portfolio_stock_delete,
-  portfolio_history,
-  api_watchlist_prices,
+export const requireAuth = (req, res, next) => {
+  if (!req.session.userId) {
+    // Render login directly
+    return res.render("login", {
+      title: "Login Page",
+    });
+  }
+  next();
 };

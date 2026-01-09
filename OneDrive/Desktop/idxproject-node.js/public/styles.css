@@ -346,6 +346,17 @@ body {
   margin-bottom: 24px;
 }
 
+@media (max-width: 768px) {
+  .summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .summary {
+    grid-template-columns: 1fr;
+  }
+}
 .summary-card {
   border: 1px solid #eee;
   padding: 16px;
@@ -379,6 +390,11 @@ body {
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 6px;
+}
+@media (max-width: 768px) {
+  .add-form {
+    grid-template-columns: 1fr;
+  }
 }
 
 .add-form button {
@@ -429,4 +445,52 @@ body {
   text-align: center;
   padding: 60px 0;
   color: #777;
+}/* Tabs: stack vertically on small screens */
+@media (max-width: 600px) {
+  .tabs {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .tab {
+    width: 100%;
+    font-size: 16px;
+  }
+}
+
+/* Summary cards: reduce columns */
+@media (max-width: 768px) {
+  .summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Add form: stack inputs */
+@media (max-width: 768px) {
+  .add-form {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .add-form input,
+  .add-form button {
+    width: 100%;
+  }
+}
+
+/* Table: make scrollable */
+.table-wrapper {
+  overflow-x: auto;
+}
+.portfolio-table {
+  min-width: 600px; /* ensures horizontal scroll instead of squishing */
+}
+
+/* Buttons: larger tap targets */
+.details-btn {
+  padding: 8px 12px;
+  font-size: 14px;
 }

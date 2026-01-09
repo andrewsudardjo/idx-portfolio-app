@@ -2,15 +2,19 @@
   "name": "idx-portfolio-app",
   "version": "1.0.0",
   "main": "app.js",
+  "type": "module",
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
+    "dotenv": "^16.4.0",
     "ejs": "^3.1.10",
     "express": "^5.2.1",
+    "express-session": "^1.18.2",
     "mongoose": "^8.20.4",
-    "dotenv": "^16.4.0"
+    "yahoo-finance2": "^3.11.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"

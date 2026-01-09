@@ -1,19 +1,31 @@
-const express = require("express");
+import express from "express";
+import {
+  stock_index,
+  stock_portfolio,
+  portfolio_add_post,
+  stock_add_post,
+  stock_details,
+  stock_delete,
+  portfolio_stock_delete,
+  portfolio_history,
+  api_watchlist_prices,
+  requireAuth,
+} from "../controller/stockController.js";
+
 const router = express.Router();
-const stockController = require("../controller/stockController");
 
 /* ========= WATCHLIST ========= */
-router.get("/", stockController.stock_index); // Homepage (watchlist)
-router.post("/watchlist", stockController.stock_add_post);
-router.delete("/watchlist/:id", stockController.stock_delete);
-router.get("/watchlist/:id", stockController.stock_details);
+router.get("/", stock_index); // Homepage (watchlist)
+router.post("/watchlist", stock_add_post);
+router.delete("/watchlist/:id", stock_delete);
+router.get("/watchlist/:id", stock_details);
 
 /* ========= PORTFOLIO ========= */
-router.get("/portfolio", stockController.stock_portfolio);
-router.get("/portfolio/History", stockController.portfolio_history);
-router.post("/portfolio", stockController.portfolio_add_post);
-router.delete("/portfolio/:id", stockController.portfolio_stock_delete);
+router.get("/portfolio", requireAuth, stock_portfolio);
+router.get("/portfolio/History", requireAuth, portfolio_history);
+router.post("/portfolio", portfolio_add_post);
+router.delete("/portfolio/:id", portfolio_stock_delete);
 
-router.get("/api/watchlist", stockController.api_watchlist_prices);
+router.get("/api/watchlist", api_watchlist_prices);
 
-module.exports = router;
+export default router;

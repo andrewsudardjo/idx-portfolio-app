@@ -1,26 +1,21 @@
-async function fetchStock(symbol) {
+import YahooFinance from "yahoo-finance2";
+
+const yahooFinance = new YahooFinance();
+
+export default async function fetchStock(symbol) {
   try {
-    const res = await fetch(
-      `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}.JK`
-    );
-    const data = await res.json();
-
-    const result = data.chart?.result?.[0];
-    if (!result) return null;
-
-    const meta = result.meta;
+    // For Indonesian stocks, append ".JK"
+    const quote = await yahooFinance.quote(`${symbol}.JK`);
 
     return {
-      marketPrice: meta.regularMarketPrice || null,
-      high: meta.regularMarketDayHigh || null,
-      low: meta.regularMarketDayLow || null,
-      volume: meta.regularMarketVolume || null,
-      prevDayClose: meta.previousClose || null,
+      marketPrice: quote.regularMarketPrice,
+      high: quote.regularMarketDayHigh,
+      low: quote.regularMarketDayLow,
+      volume: quote.regularMarketVolume,
+      prevDayClose: quote.previousClose,
     };
   } catch (err) {
-    console.error(err);
+    console.error(`Failed to fetch ${symbol}:`, err.message);
     return null;
   }
 }
-
-module.exports = fetchStock;
