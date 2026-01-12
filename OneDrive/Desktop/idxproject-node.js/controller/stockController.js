@@ -26,7 +26,7 @@ export const stock_index = async (req, res) => {
           100
         : 0,
     }));
-
+    console.log(watchlistWithData);
     res.render("homepage", {
       title: "IDX Screener",
       watchlist: watchlistWithData,
@@ -91,7 +91,7 @@ export const stock_portfolio = async (req, res) => {
 
 // Order history
 export const portfolio_history = async (req, res) => {
-  const stocks = await Order.find().sort({ date: -1 });
+  const stocks = await Order.find().sort({ tradeDate: -1 });
   res.render("portfolioHistory", {
     title: "Order History",
     order: stocks,

@@ -12,7 +12,7 @@ export default async function fetchStock(symbol) {
       high: quote.regularMarketDayHigh,
       low: quote.regularMarketDayLow,
       volume: quote.regularMarketVolume,
-      prevDayClose: quote.previousClose,
+      prevDayClose: quote.regularMarketPreviousClose,
     };
   } catch (err) {
     console.error(`Failed to fetch ${symbol}:`, err.message);
